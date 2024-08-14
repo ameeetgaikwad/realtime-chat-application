@@ -1,5 +1,11 @@
 import { WebcamIcon } from "@/components/icons/webcam-icon";
 import { Button } from "@/components/ui/button";
+import {
+  SignedIn,
+  SignedOut,
+  SignInButton,
+  UserButton,
+} from "@clerk/clerk-react";
 import { Link } from "@tanstack/react-router";
 import { createLazyFileRoute } from "@tanstack/react-router";
 
@@ -16,7 +22,14 @@ function Index() {
           <span className="sr-only">Messaging App</span>
         </Link>
         <div className="flex items-center gap-4">
-          <Button variant="outline">Sign In</Button>
+          <SignedOut>
+            <Button>
+              <SignInButton />
+            </Button>
+          </SignedOut>
+          <SignedIn>
+            <UserButton />
+          </SignedIn>
         </div>
       </header>
       <main className="flex-1">
@@ -35,14 +48,19 @@ function Index() {
                   anytime, anywhere.
                 </p>
                 <div className="space-x-4">
-                  <Button className="inline-flex h-9 items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50">
-                    Sign In
-                  </Button>
+                  <SignedOut>
+                    <Button>
+                      <SignInButton />
+                    </Button>
+                  </SignedOut>
+                  <SignedIn>
+                    <UserButton />
+                  </SignedIn>
                 </div>
               </div>
             </div>
             <img
-              src="/placeholder.svg"
+              src="/src/assets/chat.png"
               width="1270"
               height="300"
               alt="Hero"
