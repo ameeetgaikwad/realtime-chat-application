@@ -29,7 +29,7 @@ const ChatArea = () => {
   useEffect(() => {
     console.log("inside use effect");
     if (user) {
-      console.log("inside if");
+      console.log("inside if",user?.emailAddresses[0].emailAddress);
       joinChat(
         user?.emailAddresses[0].emailAddress,
         user?.firstName || "",
