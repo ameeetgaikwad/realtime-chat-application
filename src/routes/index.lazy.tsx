@@ -5,15 +5,24 @@ import {
   SignedOut,
   SignInButton,
   UserButton,
+  useUser,
 } from "@clerk/clerk-react";
-import { Link } from "@tanstack/react-router";
+import { Link, useRouter } from "@tanstack/react-router";
 import { createLazyFileRoute } from "@tanstack/react-router";
-
+import chatImage from "@/assets/chat.png";
+import { useEffect } from "react";
 export const Route = createLazyFileRoute("/")({
   component: Index,
 });
 
 function Index() {
+  const router = useRouter();
+  const { isSignedIn } = useUser();
+  useEffect(() => {
+    if (isSignedIn) {
+      router.navigate({ to: "/chat" });
+    }
+  }, []);
   return (
     <div className="flex flex-col min-h-[100dvh]">
       <header className="px-4 lg:px-6 h-14 flex items-center justify-between">
@@ -60,7 +69,7 @@ function Index() {
               </div>
             </div>
             <img
-              src="/src/assets/chat.png"
+              src={chatImage}
               width="1270"
               height="300"
               alt="Hero"
