@@ -35,6 +35,7 @@ const ChatArea = () => {
         user?.firstName || "",
         user?.lastName || ""
       );
+      console.log('donnee')
     }
   }, [user, isSignedIn]);
 
