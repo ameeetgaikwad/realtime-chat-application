@@ -1,14 +1,14 @@
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { SendIcon } from "../icons";
+import { ClipIcon, SendIcon } from "../icons";
 import { useChat } from "@/contexts/chatContext";
 import { useEffect, useState } from "react";
 import { useUser } from "@clerk/clerk-react";
+import { useDebounce } from "use-debounce";
 
 const ChatArea = () => {
   const { user, isSignedIn } = useUser();
-
   const {
     messages,
     sendMessage,
@@ -16,26 +16,52 @@ const ChatArea = () => {
     currentUser,
     joinChat,
     currentReceipient,
+    startTyping,
+    isUserTyping,
   } = useChat();
   const [messageContent, setMessageContent] = useState("");
+  const [isTyping, setIsTyping] = useState(false);
+  const [debouncedMessageContent] = useDebounce(messageContent, 800);
 
   const handleSendMessage = () => {
     if (activeConversation && messageContent.trim() && currentUser) {
+      setIsTyping(false);
       sendMessage(activeConversation, messageContent, currentUser.id);
       setMessageContent("");
     }
   };
 
   useEffect(() => {
+    if (messageContent && !isTyping && activeConversation && currentUser) {
+      setIsTyping(true);
+      startTyping(true, activeConversation, currentUser?.id);
+    }
+
+    if (!messageContent && activeConversation && currentUser) {
+      startTyping(false, activeConversation, currentUser?.id);
+    }
+
+    if (
+      debouncedMessageContent === messageContent &&
+      isTyping &&
+      activeConversation &&
+      currentUser
+    ) {
+      setIsTyping(false);
+      startTyping(false, activeConversation, currentUser?.id);
+    }
+  }, [messageContent, debouncedMessageContent]);
+
+  useEffect(() => {
     console.log("inside use effect");
     if (user) {
-      console.log("inside if",user?.emailAddresses[0].emailAddress);
+      console.log("inside if", user?.emailAddresses[0].emailAddress);
       joinChat(
         user?.emailAddresses[0].emailAddress,
         user?.firstName || "",
         user?.lastName || ""
       );
-      console.log('donnee')
+      console.log("donnee");
     }
   }, [user, isSignedIn]);
 
@@ -55,7 +81,12 @@ const ChatArea = () => {
         </Avatar>
         <div>
           <div className="font-semibold">{currentReceipient?.firstName}</div>
-          <div className="text-xs text-muted-foreground">Online</div>
+          <div className="text-xs text-muted-foreground">
+            {isUserTyping[activeConversation]?.isTyping == true &&
+            isUserTyping[activeConversation]?.userId == currentReceipient?.id
+              ? "Typing..."
+              : ""}
+          </div>
         </div>
       </div>
       <div
@@ -68,26 +99,29 @@ const ChatArea = () => {
             className={`flex ${message.senderId === currentUser?.id ? "justify-end" : "justify-start"}`}
           >
             <div
-              className={`p-4 rounded-lg ${message.senderId === currentUser?.id ? "bg-red-500 text-white" : "bg-gray-100"}`}
+              className={`p-3 rounded-lg ${message.senderId === currentUser?.id ? "bg-[#EF6144] text-white" : "bg-[#F6F6F6] text-[#454545]"}`}
             >
               {message.content}
             </div>
           </div>
         ))}
       </div>
-      <div className="flex items-center p-4 border-t">
+      <div className="flex items-center p-4 border-t gap-2">
         <Input
           type="text"
           placeholder="Type your message here"
-          className="flex-1"
+          className="flex-1 bg-[#F6F6F6] text-[#6E6D6D] border-[#D1D1D1] border-[1px]"
           value={messageContent}
           onChange={(e) => setMessageContent(e.target.value)}
           onKeyPress={(e) => e.key === "Enter" && handleSendMessage()}
         />
+        <Button variant="ghost" size="icon" className="">
+          <ClipIcon className="w-6 h-6 text-red-500" />
+        </Button>
         <Button
           variant="ghost"
           size="icon"
-          className="ml-2"
+          className="ml-2 hover:bg-[#FEE7E2]"
           onClick={handleSendMessage}
         >
           <SendIcon className="w-6 h-6 text-red-500" />

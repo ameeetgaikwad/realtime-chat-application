@@ -1,11 +1,13 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { socket } from "@/lib/socket";
+import { useUser } from "@clerk/clerk-react";
 
 export interface User {
   id: number;
   email: string;
   isOnline: boolean;
   firstName: string;
+  lastName: string;
 }
 
 export interface Message {
@@ -41,6 +43,17 @@ interface ChatContextType {
   currentReceipient: User | null;
   setCurrentReceipient: (user: User | null) => void;
   getConversation: (conversationId: number) => void;
+  startTyping: (
+    typeing: boolean,
+    conversationId: number,
+    senderId: number
+  ) => void;
+  isUserTyping: {
+    [receipientId: number]: { isTyping: boolean; userId: number };
+  };
+  setIsUserTyping: (isTyping: {
+    [receipientId: number]: { isTyping: boolean; userId: number };
+  }) => void;
 }
 
 const ChatContext = createContext<ChatContextType | undefined>(undefined);
@@ -48,6 +61,7 @@ const ChatContext = createContext<ChatContextType | undefined>(undefined);
 export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
+  const user = useUser();
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [messages, setMessages] = useState<{
@@ -58,6 +72,9 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({
   );
   const [allUsers, setAllUsers] = useState<User[]>([]);
   const [currentReceipient, setCurrentReceipient] = useState<User | null>(null);
+  const [isUserTyping, setIsUserTyping] = useState<{
+    [receipientId: number]: { isTyping: boolean; userId: number };
+  }>({});
 
   useEffect(() => {
     socket.on("joined", (user: User) => {
@@ -98,10 +115,19 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({
     socket.on(
       "conversationReady",
       (conversationId: number, recentMessages: Message[]) => {
-        console.log("conversation ready",recentMessages,conversationId);
+        console.log("conversation ready", recentMessages, conversationId);
         setActiveConversation(conversationId);
         setMessages((prev) => {
-          return { ...prev, [conversationId]: recentMessages.reverse() };
+          return { ...prev, [conversationId]: recentMessages?.reverse() };
+        });
+      }
+    );
+
+    socket.on(
+      "userTyping",
+      (isTyping: boolean, conversationId: number, userId: number) => {
+        setIsUserTyping((prev) => {
+          return { ...prev, [conversationId]: { isTyping, userId } };
         });
       }
     );
@@ -114,7 +140,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({
       socket.off("conversationReady");
       socket.off("messageSent");
     };
-  }, [currentUser]);
+  }, [currentUser, user]);
 
   const joinChat = (email: string, firstName: string, lastName: string) => {
     socket.emit("join", email, firstName, lastName);
@@ -136,6 +162,13 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({
     socket.emit("getConversation", conversationId);
   };
 
+  const startTyping = (
+    typeing: boolean,
+    conversationId: number,
+    senderId: number
+  ) => {
+    socket.emit("typing", typeing, conversationId, senderId);
+  };
   return (
     <ChatContext.Provider
       value={{
@@ -151,6 +184,9 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({
         currentReceipient,
         setCurrentReceipient,
         getConversation,
+        startTyping,
+        isUserTyping,
+        setIsUserTyping,
       }}
     >
       {children}

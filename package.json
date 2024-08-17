@@ -21,7 +21,8 @@
     "react-dom": "^18.3.1",
     "socket.io-client": "^4.7.5",
     "tailwind-merge": "^2.5.2",
-    "tailwindcss-animate": "^1.0.7"
+    "tailwindcss-animate": "^1.0.7",
+    "use-debounce": "^10.0.3"
   },
   "devDependencies": {
     "@eslint/js": "^9.8.0",

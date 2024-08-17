@@ -1,4 +1,3 @@
-import { WebcamIcon } from "@/components/icons/webcam-icon";
 import { Button } from "@/components/ui/button";
 import {
   SignedIn,
@@ -11,6 +10,7 @@ import { Link, useRouter } from "@tanstack/react-router";
 import { createLazyFileRoute } from "@tanstack/react-router";
 import chatImage from "@/assets/chat.png";
 import { useEffect } from "react";
+import { WebcamIcon } from "@/components/icons";
 export const Route = createLazyFileRoute("/")({
   component: Index,
 });
@@ -22,7 +22,7 @@ function Index() {
     if (isSignedIn) {
       router.navigate({ to: "/chat" });
     }
-  }, []);
+  }, [isSignedIn]);
   return (
     <div className="flex flex-col min-h-[100dvh]">
       <header className="px-4 lg:px-6 h-14 flex items-center justify-between">
