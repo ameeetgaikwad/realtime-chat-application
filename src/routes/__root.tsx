@@ -1,7 +1,7 @@
 import { createRootRoute, Outlet } from "@tanstack/react-router";
 import { Toaster } from "@/components/ui/sonner"
 
-// import { TanStackRouterDevtools } from "@tanstack/router-devtools";
+import { TanStackRouterDevtools } from "@tanstack/router-devtools";
 
 export const Route = createRootRoute({
   component: () => (
@@ -10,7 +10,7 @@ export const Route = createRootRoute({
       {/* <hr /> */}
       <Outlet />
       <Toaster position="top-right" />
-      {/* <TanStackRouterDevtools /> */}
+      <TanStackRouterDevtools />
     </>
   ),
 });

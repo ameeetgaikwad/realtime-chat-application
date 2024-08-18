@@ -36,7 +36,9 @@ interface ChatContextType {
   sendMessage: (
     conversationId: number,
     content: string,
-    senderId: number
+    senderId: number,
+    mediaUrl?: string,
+    mediaType?: string
   ) => void;
   joinChat: (email: string, firstName: string, lastName: string) => void;
   startConversation: (otherUserId: number, currentUserId: number) => void;
@@ -204,9 +206,22 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({
   const sendMessage = (
     conversationId: number,
     content: string,
-    senderId: number
+    senderId: number,
+    mediaUrl?: string,
+    mediaType?: string
   ) => {
-    socket.emit("message", content, conversationId, senderId);
+    if (mediaUrl && mediaType) {
+      socket.emit(
+        "message",
+        content,
+        conversationId,
+        senderId,
+        mediaUrl,
+        mediaType
+      );
+    } else {
+      socket.emit("message", content, conversationId, senderId);
+    }
   };
 
   const startConversation = (otherUserId: number, currentUserId: number) => {

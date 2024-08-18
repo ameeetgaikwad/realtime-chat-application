@@ -9,7 +9,7 @@ import {
 import { Link } from "@tanstack/react-router";
 import { createLazyFileRoute } from "@tanstack/react-router";
 import chatImage from "@/assets/chat.png";
-// import { useEffect } from "react";
+
 import { WebcamIcon } from "@/components/icons";
 export const Route = createLazyFileRoute("/")({
   component: Index,

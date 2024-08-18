@@ -50,12 +50,19 @@ const Sidebar = () => {
       const message = recentMessages.find(
         (msg) => msg.conversationId === conversation.id
       );
-
-      return (
-        <div className="text-[#454545] font-medium">
-          {truncateText(message?.recentMessage?.content || "", 50)}
-        </div>
-      );
+      if (!message?.recentMessage?.mediaType) {
+        return (
+          <div className="text-[#454545] font-medium">
+            {truncateText(message?.recentMessage?.content || "", 50)}
+          </div>
+        );
+      } else {
+        return (
+          <div className="text-[#454545] font-medium">
+            <span className="text-[#454545] font-medium">Media</span>
+          </div>
+        );
+      }
     }
     return <></>;
   };
@@ -87,7 +94,7 @@ const Sidebar = () => {
 
   return (
     <>
-      {allUsers.length > 0 && recentMessages.length > 0 ? (
+      {allUsers.length > 0 ? (
         <div className="w-1/3 border-r">
           <div className="p-4 flex items-center">
             <SearchIcon className="absolute left-5" />
@@ -119,7 +126,7 @@ const Sidebar = () => {
                 key={user.id}
                 className={cn(
                   "flex items-start p-4 border-b cursor-pointer",
-                  !isRead(user) && "bg-red-200",
+                  !isRead(user) && "bg-[#FEE7E2]",
                   currentReceipient?.id === user.id &&
                     "bg-[#F6F6F6] border-l-2 border-l-[#DC4A2D]"
                 )}
