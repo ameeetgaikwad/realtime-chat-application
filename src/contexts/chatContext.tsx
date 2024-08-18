@@ -34,6 +34,7 @@ interface ChatContextType {
   conversations: Conversation[];
   messages: { [conversationId: number]: Message[] };
   allUsers: User[];
+  setAllUsers: (users: User[]) => void;
   sendMessage: (
     conversationId: number,
     content: string,
@@ -293,6 +294,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({
         setRecentMessages,
         markMessagesAsRead,
         fetchMoreMessages,
+        setAllUsers,
       }}
     >
       {children}

@@ -27,6 +27,7 @@ const ChatArea = () => {
     recentMessages,
     markMessagesAsRead,
     fetchMoreMessages,
+    setAllUsers,
   } = useChat();
   const [messageContent, setMessageContent] = useState("");
   const [isTyping, setIsTyping] = useState(false);
@@ -163,6 +164,13 @@ const ChatArea = () => {
       }, 2000); // Prevent multiple rapid calls
     }
   };
+
+  useEffect(() => {
+    const filteredUsers = allUsers.filter(
+      (user) => user.id !== currentUser?.id
+    );
+    setAllUsers(filteredUsers);
+  }, [currentUser]);
 
   if (allUsers.length <= 0) {
     return "";
