@@ -104,7 +104,7 @@ const Sidebar = () => {
               className="w-full pl-8 bg-[#F6F6F6] text-[#6E6D6D] border-[#D1D1D1] border-[1px]"
             />
           </div>
-          <div className="flex gap-3 p-2 mb-2">
+          <div className="flex gap-3 p-2 mb-2 overflow-x-scroll">
             {CHAT_CATEGORIES.map((category) => {
               return (
                 <button

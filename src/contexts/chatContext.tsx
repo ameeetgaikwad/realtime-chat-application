@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { socket } from "@/lib/socket";
 import { useUser } from "@clerk/clerk-react";
+import { toast } from "sonner";
 
 export interface User {
   id: number;
@@ -66,6 +67,7 @@ interface ChatContextType {
     messages: { conversationId: number; recentMessage: Message }[]
   ) => void;
   markMessagesAsRead: (messageId: number) => void;
+  fetchMoreMessages: (conversationId: number, limit: number) => void;
 }
 
 const ChatContext = createContext<ChatContextType | undefined>(undefined);
@@ -124,6 +126,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({
           message,
         ],
       }));
+      toast.success("Message sent");
     });
 
     socket.on("userList", (users: User[]) => {
@@ -138,6 +141,8 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({
         setMessages((prev) => {
           return { ...prev, [conversationId]: recentMessages?.reverse() };
         });
+
+        console.log("recent messages", recentMessages);
       }
     );
 
@@ -185,6 +190,14 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({
       }
     });
 
+    socket.on("moreMessages", ({ conversationId, messages: newMessages }) => {
+      setMessages((prev) => ({
+        ...prev,
+        [conversationId]: [...newMessages].reverse(),
+      }));
+      console.log("new messages", newMessages);
+    });
+
     return () => {
       socket.off("joined");
       socket.off("conversationList");
@@ -196,6 +209,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({
       socket.off("userOnline");
       socket.off("recentMessages");
       socket.off("messagesRead");
+      socket.off("moreMessages");
     };
   }, [currentUser, user]);
 
@@ -247,6 +261,12 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({
   const markMessagesAsRead = (messageId: number) => {
     socket.emit("readMessages", messageId);
   };
+
+  const fetchMoreMessages = (conversationId: number, limit: number) => {
+    const fetchNumberMessages = messages[conversationId].length + limit;
+    socket.emit("loadMoreMessages", conversationId, fetchNumberMessages);
+  };
+
   return (
     <ChatContext.Provider
       value={{
@@ -271,6 +291,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({
         recentMessages,
         setRecentMessages,
         markMessagesAsRead,
+        fetchMoreMessages,
       }}
     >
       {children}

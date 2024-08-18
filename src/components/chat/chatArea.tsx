@@ -8,6 +8,8 @@ import { useUser } from "@clerk/clerk-react";
 import { useDebounce } from "use-debounce";
 import { storage } from "@/lib/firebase";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
+import { toast } from "sonner";
+
 const ChatArea = () => {
   const { user, isSignedIn } = useUser();
   const {
@@ -24,6 +26,7 @@ const ChatArea = () => {
     getLatestMessages,
     recentMessages,
     markMessagesAsRead,
+    fetchMoreMessages,
   } = useChat();
   const [messageContent, setMessageContent] = useState("");
   const [isTyping, setIsTyping] = useState(false);
@@ -33,6 +36,8 @@ const ChatArea = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const chatContainerRef = useRef<HTMLDivElement>(null);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
 
   useEffect(() => {
     const message = recentMessages?.find(
@@ -44,6 +49,8 @@ const ChatArea = () => {
   }, [activeConversation, messages, currentUser, recentMessages]);
 
   const handleSendMessage = async () => {
+    toast.info("Sending message");
+
     if (activeConversation && currentUser) {
       setIsTyping(false);
       if (file) {
@@ -81,11 +88,18 @@ const ChatArea = () => {
   };
 
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    const scrollTimeout = setTimeout(() => {
+      if (isLoadingMore) {
+        return;
+      }
+      messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    }, 800);
+    return () => {
+      clearTimeout(scrollTimeout);
+    };
   }, [messages]);
 
   useEffect(() => {
-    console.log("inside use effect", isUserOnline);
     if (isUserOnline[currentReceipient?.id as number] == false) {
       setIsOnline(false);
     } else if (currentReceipient?.isOnline) {
@@ -119,17 +133,36 @@ const ChatArea = () => {
   }, [messageContent, debouncedMessageContent]);
 
   useEffect(() => {
-    console.log("inside use effect");
     if (user) {
-      console.log("inside if", user?.emailAddresses[0].emailAddress);
       joinChat(
         user?.emailAddresses[0].emailAddress,
         user?.firstName || "",
         user?.lastName || ""
       );
-      console.log("donnee");
     }
   }, [user, isSignedIn]);
+
+  const handleScroll = () => {
+    const container = chatContainerRef.current;
+    if (container && !isLoadingMore) {
+      const { scrollTop } = container;
+      if (scrollTop === 0) {
+        loadMoreMessages();
+      }
+    }
+  };
+
+  const loadMoreMessages = () => {
+    if (activeConversation && messages[activeConversation]?.length > 0) {
+      setIsLoadingMore(true);
+
+      fetchMoreMessages(activeConversation, 20);
+      setTimeout(() => {
+        setIsLoadingMore(false);
+        console.log("total messages", messages[activeConversation]);
+      }, 2000); // Prevent multiple rapid calls
+    }
+  };
 
   if (allUsers.length <= 0) {
     return "";
@@ -166,16 +199,22 @@ const ChatArea = () => {
         </div>
       </div>
       <div
-        className="flex-1 p-4 space-y-4 overflow-y-auto"
-        style={{ overflowX: "hidden" }}
+        ref={chatContainerRef}
+        className="flex-1 p-4 space-y-4 overflow-y-auto overflow-x-hidden"
+        onScroll={handleScroll}
       >
+        {isLoadingMore && (
+          <div className="text-center text-gray-500">
+            Loading more messages...
+          </div>
+        )}
         {activeMessages.map((message) => (
           <div
             key={message.id}
             className={`flex ${message.senderId === currentUser?.id ? "justify-end" : "justify-start"}`}
           >
             <div
-              className={`p-3 rounded-lg ${message.senderId === currentUser?.id ? "bg-[#EF6144] text-white" : "bg-[#F6F6F6] text-[#454545]"}`}
+              className={`p-3 max-w-[70%] break-words rounded-lg ${message.senderId === currentUser?.id ? "bg-[#EF6144] text-white" : "bg-[#F6F6F6] text-[#454545]"}`}
             >
               {message.mediaUrl && message.mediaType?.startsWith("image") && (
                 <img
