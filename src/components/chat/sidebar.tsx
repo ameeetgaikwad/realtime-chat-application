@@ -5,6 +5,8 @@ import { Spinner } from "../spinner";
 import { cn } from "@/lib/utils";
 import { CHAT_CATEGORIES } from "@/constants/chat-categories";
 import { SearchIcon } from "../icons";
+import { useEffect, useMemo, useState } from "react";
+import { truncateText } from "@/utils/text";
 
 const Sidebar = () => {
   const {
@@ -15,8 +17,17 @@ const Sidebar = () => {
     setCurrentReceipient,
     getConversation,
     currentReceipient,
+    currentUser,
+    recentMessages,
+    getLatestMessages,
   } = useChat();
-  // console.log(messages[27],'klj')
+
+  const [currentCategory, setCurrentCategory] = useState("All");
+
+  useEffect(() => {
+    getLatestMessages(currentUser?.id as number);
+  }, [currentUser]);
+
   const handleUserClick = (user: User) => {
     setCurrentReceipient(user);
     const existingConversation = conversations.find(
@@ -27,13 +38,56 @@ const Sidebar = () => {
       setActiveConversation(existingConversation.id);
       getConversation(existingConversation.id);
     } else {
-      startConversation(user.id);
+      startConversation(user.id, currentUser?.id as number);
     }
   };
 
+  const renderLatestMessage = (user: User) => {
+    const conversation = conversations.find(
+      (conv) => conv.user1Id === user?.id || conv.user2Id === user?.id
+    );
+    if (conversation) {
+      const message = recentMessages.find(
+        (msg) => msg.conversationId === conversation.id
+      );
+
+      return (
+        <div className="text-[#454545] font-medium">
+          {truncateText(message?.recentMessage?.content || "", 50)}
+        </div>
+      );
+    }
+    return <></>;
+  };
+
+  const isRead = (user: User) => {
+    const conversation = conversations.find(
+      (conv) => conv.user1Id === user?.id || conv.user2Id === user?.id
+    );
+    if (conversation) {
+      const message = recentMessages.find(
+        (msg) => msg.conversationId === conversation.id
+      );
+      if (message?.recentMessage?.senderId === currentUser?.id) return true;
+      return message?.recentMessage?.isRead;
+    }
+    return false;
+  };
+
+  const filteredUsers = useMemo(() => {
+    if (currentCategory === "All") return allUsers;
+    else if (currentCategory === "Archived" || currentCategory === "Blocked") {
+      return [];
+    } else if (currentCategory === "Unread") {
+      return allUsers.filter((user) => !isRead(user));
+    } else {
+      return allUsers;
+    }
+  }, [allUsers, currentCategory, recentMessages]);
+
   return (
     <>
-      {allUsers.length > 0 ? (
+      {allUsers.length > 0 && recentMessages.length > 0 ? (
         <div className="w-1/3 border-r">
           <div className="p-4 flex items-center">
             <SearchIcon className="absolute left-5" />
@@ -48,7 +102,11 @@ const Sidebar = () => {
               return (
                 <button
                   key={category}
-                  className="text-xs text-[#DC4A2D] bg-[#FEF4F2] border-[#FCB4A5] border-[1px] rounded-full px-2"
+                  className={cn(
+                    "text-xs text-[#DC4A2D] bg-[#FEF4F2] border-[#FCB4A5] border-[1px] rounded-full px-2",
+                    currentCategory === category && "bg-[#DC4A2D] text-white"
+                  )}
+                  onClick={() => setCurrentCategory(category)}
                 >
                   {category}
                 </button>
@@ -56,11 +114,12 @@ const Sidebar = () => {
             })}
           </div>
           <div className="overflow-y-auto h-[calc(100vh-8rem)]">
-            {allUsers.map((user) => (
+            {filteredUsers.map((user) => (
               <div
                 key={user.id}
                 className={cn(
                   "flex items-start p-4 border-b cursor-pointer",
+                  !isRead(user) && "bg-red-200",
                   currentReceipient?.id === user.id &&
                     "bg-[#F6F6F6] border-l-2 border-l-[#DC4A2D]"
                 )}
@@ -72,8 +131,8 @@ const Sidebar = () => {
                 </Avatar>
                 <div>
                   <div className="font-semibold">{`${user.firstName} ${user.lastName}`}</div>
-                  <div className="text-xs text-muted-foreground">
-                    {user.isOnline ? "Online" : "Offline"}
+                  <div className="text-xs text-muted-foreground flex flex-wrap">
+                    {renderLatestMessage(user)}
                   </div>
                 </div>
               </div>
@@ -82,7 +141,7 @@ const Sidebar = () => {
         </div>
       ) : (
         <>
-          <div className="h-screen flex items-center justify-center w-[30%]">
+          <div className="h-screen flex items-center justify-center w-full">
             <Spinner />
           </div>
         </>

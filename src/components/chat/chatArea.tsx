@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { ClipIcon, SendIcon } from "../icons";
 import { useChat } from "@/contexts/chatContext";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useUser } from "@clerk/clerk-react";
 import { useDebounce } from "use-debounce";
 
@@ -18,18 +18,53 @@ const ChatArea = () => {
     currentReceipient,
     startTyping,
     isUserTyping,
+    isUserOnline,
+    allUsers,
+    getLatestMessages,
+    recentMessages,
+    markMessagesAsRead,
   } = useChat();
   const [messageContent, setMessageContent] = useState("");
   const [isTyping, setIsTyping] = useState(false);
+  const [isOnline, setIsOnline] = useState(false);
   const [debouncedMessageContent] = useDebounce(messageContent, 800);
+
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const message = recentMessages?.find(
+      (msg) => msg.conversationId == activeConversation
+    );
+    if (message) {
+      markMessagesAsRead(message?.recentMessage?.id);
+    }
+  }, [activeConversation, messages, currentUser, recentMessages]);
 
   const handleSendMessage = () => {
     if (activeConversation && messageContent.trim() && currentUser) {
       setIsTyping(false);
       sendMessage(activeConversation, messageContent, currentUser.id);
       setMessageContent("");
+      getLatestMessages(currentUser?.id as number);
     }
   };
+
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
+
+  useEffect(() => {
+    console.log("inside use effect", isUserOnline);
+    if (isUserOnline[currentReceipient?.id as number] == false) {
+      setIsOnline(false);
+    } else if (currentReceipient?.isOnline) {
+      setIsOnline(true);
+    } else if (isUserOnline[currentReceipient?.id as number]) {
+      setIsOnline(true);
+    } else {
+      setIsOnline(false);
+    }
+  }, [isUserOnline, currentReceipient]);
 
   useEffect(() => {
     if (messageContent && !isTyping && activeConversation && currentUser) {
@@ -65,6 +100,9 @@ const ChatArea = () => {
     }
   }, [user, isSignedIn]);
 
+  if (allUsers.length <= 0 || recentMessages.length <= 0) {
+    return "";
+  }
   if (!activeConversation) {
     return (
       <div className="flex-1 p-4">Select a conversation to start chatting</div>
@@ -80,7 +118,14 @@ const ChatArea = () => {
           <AvatarFallback>U</AvatarFallback>
         </Avatar>
         <div>
-          <div className="font-semibold">{currentReceipient?.firstName}</div>
+          <div className="font-semibold flex gap-1">
+            {currentReceipient?.firstName}
+            {isOnline ? (
+              <div className="rounded-full bg-green-400 w-2 h-2"></div>
+            ) : (
+              ""
+            )}
+          </div>
           <div className="text-xs text-muted-foreground">
             {isUserTyping[activeConversation]?.isTyping == true &&
             isUserTyping[activeConversation]?.userId == currentReceipient?.id
@@ -105,6 +150,7 @@ const ChatArea = () => {
             </div>
           </div>
         ))}
+        <div ref={messagesEndRef} />
       </div>
       <div className="flex items-center p-4 border-t gap-2">
         <Input

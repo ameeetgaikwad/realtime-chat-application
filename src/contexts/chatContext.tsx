@@ -12,11 +12,13 @@ export interface User {
 
 export interface Message {
   id: number;
+  createdAt: Date;
   senderId: number;
-  content: string;
-  createdAt: string;
-  isRead: boolean;
   conversationId: number;
+  content: string;
+  isRead: boolean;
+  mediaUrl: string | null;
+  mediaType: string | null;
 }
 
 export interface Conversation {
@@ -37,7 +39,7 @@ interface ChatContextType {
     senderId: number
   ) => void;
   joinChat: (email: string, firstName: string, lastName: string) => void;
-  startConversation: (otherUserId: number) => void;
+  startConversation: (otherUserId: number, currentUserId: number) => void;
   activeConversation: number | null;
   setActiveConversation: (id: number | null) => void;
   currentReceipient: User | null;
@@ -54,6 +56,14 @@ interface ChatContextType {
   setIsUserTyping: (isTyping: {
     [receipientId: number]: { isTyping: boolean; userId: number };
   }) => void;
+  isUserOnline: { [userId: number]: boolean | null };
+  setIsUserOnline: (isOnline: { [userId: number]: boolean | null }) => void;
+  getLatestMessages: (userId: number) => void;
+  recentMessages: { conversationId: number; recentMessage: Message }[];
+  setRecentMessages: (
+    messages: { conversationId: number; recentMessage: Message }[]
+  ) => void;
+  markMessagesAsRead: (messageId: number) => void;
 }
 
 const ChatContext = createContext<ChatContextType | undefined>(undefined);
@@ -75,6 +85,12 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({
   const [isUserTyping, setIsUserTyping] = useState<{
     [receipientId: number]: { isTyping: boolean; userId: number };
   }>({});
+  const [isUserOnline, setIsUserOnline] = useState<{
+    [userId: number]: boolean | null;
+  }>({});
+  const [recentMessages, setRecentMessages] = useState<
+    { conversationId: number; recentMessage: Message }[]
+  >([]);
 
   useEffect(() => {
     socket.on("joined", (user: User) => {
@@ -132,6 +148,41 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({
       }
     );
 
+    socket.on("userOnline", (isOnline: boolean, userId: number) => {
+      setIsUserOnline((prev) => {
+        return { ...prev, [userId]: isOnline };
+      });
+    });
+
+    socket.on("recentMessages", (messages) => {
+      setRecentMessages(messages);
+    });
+
+    socket.on("messagesRead", (messageId: number, conversationId: number) => {
+      const msg = recentMessages?.find(
+        (msg) => msg.conversationId === conversationId
+      );
+      if (msg) {
+        setRecentMessages((prev) => {
+          return prev.map((item) => {
+            if (
+              item.conversationId === conversationId &&
+              item.recentMessage.id === messageId
+            ) {
+              return {
+                ...item,
+                recentMessage: {
+                  ...item.recentMessage,
+                  isRead: true,
+                },
+              };
+            }
+            return item;
+          });
+        });
+      }
+    });
+
     return () => {
       socket.off("joined");
       socket.off("conversationList");
@@ -139,6 +190,10 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({
       socket.off("userList");
       socket.off("conversationReady");
       socket.off("messageSent");
+      socket.off("userTyping");
+      socket.off("userOnline");
+      socket.off("recentMessages");
+      socket.off("messagesRead");
     };
   }, [currentUser, user]);
 
@@ -154,8 +209,8 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({
     socket.emit("message", content, conversationId, senderId);
   };
 
-  const startConversation = (otherUserId: number) => {
-    socket.emit("getOrCreateConversation", otherUserId);
+  const startConversation = (otherUserId: number, currentUserId: number) => {
+    socket.emit("getOrCreateConversation", otherUserId, currentUserId);
   };
 
   const getConversation = (conversationId: number) => {
@@ -168,6 +223,14 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({
     senderId: number
   ) => {
     socket.emit("typing", typeing, conversationId, senderId);
+  };
+
+  const getLatestMessages = (userId: number) => {
+    socket.emit("getLatestMessages", userId);
+  };
+
+  const markMessagesAsRead = (messageId: number) => {
+    socket.emit("readMessages", messageId);
   };
   return (
     <ChatContext.Provider
@@ -187,6 +250,12 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({
         startTyping,
         isUserTyping,
         setIsUserTyping,
+        isUserOnline,
+        setIsUserOnline,
+        getLatestMessages,
+        recentMessages,
+        setRecentMessages,
+        markMessagesAsRead,
       }}
     >
       {children}

@@ -6,23 +6,17 @@ import {
   UserButton,
   useUser,
 } from "@clerk/clerk-react";
-import { Link, useRouter } from "@tanstack/react-router";
+import { Link } from "@tanstack/react-router";
 import { createLazyFileRoute } from "@tanstack/react-router";
 import chatImage from "@/assets/chat.png";
-import { useEffect } from "react";
+// import { useEffect } from "react";
 import { WebcamIcon } from "@/components/icons";
 export const Route = createLazyFileRoute("/")({
   component: Index,
 });
 
 function Index() {
-  const router = useRouter();
   const { isSignedIn } = useUser();
-  useEffect(() => {
-    if (isSignedIn) {
-      router.navigate({ to: "/chat" });
-    }
-  }, [isSignedIn]);
   return (
     <div className="flex flex-col min-h-[100dvh]">
       <header className="px-4 lg:px-6 h-14 flex items-center justify-between">
@@ -59,12 +53,17 @@ function Index() {
                 <div className="space-x-4">
                   <SignedOut>
                     <Button>
-                      <SignInButton />
+                      <SignInButton>Sign in to chat</SignInButton>
                     </Button>
                   </SignedOut>
-                  <SignedIn>
-                    <UserButton />
-                  </SignedIn>
+                  {isSignedIn && (
+                    <Link
+                      to="/chat"
+                      className="bg-primary text-primary-foreground shadow hover:bg-primary/90 h-9 px-4 py-2 rounded-md"
+                    >
+                      Chat
+                    </Link>
+                  )}
                 </div>
               </div>
             </div>
