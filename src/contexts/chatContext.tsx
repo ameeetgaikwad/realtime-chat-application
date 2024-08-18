@@ -130,7 +130,8 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({
     });
 
     socket.on("userList", (users: User[]) => {
-      setAllUsers(users);
+      const filteredUsers = users.filter((user) => user.id !== currentUser?.id);
+      setAllUsers(filteredUsers);
     });
 
     socket.on(
