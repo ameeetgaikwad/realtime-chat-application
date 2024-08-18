@@ -91,4 +91,4 @@ This realtime messaging application follows a modern, scalable architecture desi
    - Frontend requests paginated message history.
    - Backend queries the database and returns messages in batches, supporting infinite scrolling.
 
-This architecture provides a solid foundation for a responsive, real-time messaging application, with clear separation of concerns and scalable components.
+This architecture provides a solid foundation for a responsive, real-time messaging application.
