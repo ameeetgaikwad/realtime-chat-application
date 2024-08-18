@@ -71,10 +71,14 @@ const Sidebar = () => {
     const conversation = conversations.find(
       (conv) => conv.user1Id === user?.id || conv.user2Id === user?.id
     );
+
     if (conversation) {
       const message = recentMessages.find(
         (msg) => msg.conversationId === conversation.id
       );
+      if (message == undefined) {
+        return true;
+      }
       if (message?.recentMessage?.senderId === currentUser?.id) return true;
       return message?.recentMessage?.isRead;
     }
@@ -127,6 +131,7 @@ const Sidebar = () => {
                 className={cn(
                   "flex items-start p-4 border-b cursor-pointer",
                   !isRead(user) && "bg-[#FEE7E2]",
+                  isRead(user) == undefined && "bg-[#ffffff]",
                   currentReceipient?.id === user.id &&
                     "bg-[#F6F6F6] border-l-2 border-l-[#DC4A2D]"
                 )}
