@@ -2,6 +2,10 @@
 
 This is a modern, real-time messaging system built with React and Node.js. It enables users to engage in instant messaging with a rich set of features, such as media upload, online/offline status, etc for a seamless communication experience.
 
+## Live Demo
+
+Experience the application live at: [realtime-chat-application](https://realtime-chat-application-snowy-xi.vercel.app/)
+
 ## Key Features
 
 1. **Real-time Messaging**: Instant message delivery between users using Socket.IO.
@@ -28,7 +32,7 @@ This is a modern, real-time messaging system built with React and Node.js. It en
 - Shadcn UI (for UI components)
 - Firebase (for storage of media)
 
-### Backend
+### [Backend](https://github.com/ameeetgaikwad/realtime-chat-application-be)
 
 - Node.js
 - Express.js
