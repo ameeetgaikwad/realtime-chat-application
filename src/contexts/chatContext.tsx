@@ -99,7 +99,6 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({
 
   useEffect(() => {
     socket.on("joined", (user: User) => {
-      console.log("inside joined event");
       setCurrentUser(user);
     });
 
@@ -109,7 +108,6 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({
 
     console.log(currentUser?.id.toString(), "current user id");
     socket.on(currentUser?.id.toString() || "", (message: Message) => {
-      console.log("reached");
       setMessages((prev) => ({
         ...prev,
         [message.conversationId]: [
@@ -138,13 +136,10 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({
     socket.on(
       "conversationReady",
       (conversationId: number, recentMessages: Message[]) => {
-        console.log("conversation ready", recentMessages, conversationId);
         setActiveConversation(conversationId);
         setMessages((prev) => {
           return { ...prev, [conversationId]: recentMessages?.reverse() };
         });
-
-        console.log("recent messages", recentMessages);
       }
     );
 
@@ -197,7 +192,6 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({
         ...prev,
         [conversationId]: [...newMessages].reverse(),
       }));
-      console.log("new messages", newMessages);
     });
 
     return () => {

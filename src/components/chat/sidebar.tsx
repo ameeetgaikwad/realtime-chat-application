@@ -23,7 +23,7 @@ const Sidebar = () => {
   } = useChat();
 
   const [currentCategory, setCurrentCategory] = useState("All");
-
+  const [searchContent, setSearchContent] = useState("");
   useEffect(() => {
     getLatestMessages(currentUser?.id as number);
   }, [currentUser]);
@@ -86,15 +86,44 @@ const Sidebar = () => {
   };
 
   const filteredUsers = useMemo(() => {
-    if (currentCategory === "All") return allUsers;
-    else if (currentCategory === "Archived" || currentCategory === "Blocked") {
+    if (currentCategory === "All") {
+      if (searchContent.length > 0) {
+        return allUsers.filter((user) => {
+          if (
+            user.firstName
+              .toLowerCase()
+              .includes(searchContent.toLowerCase()) ||
+            user.lastName.toLowerCase().includes(searchContent.toLowerCase())
+          ) {
+            return user;
+          }
+        });
+      } else {
+        return allUsers;
+      }
+    } else if (
+      currentCategory === "Archived" ||
+      currentCategory === "Blocked"
+    ) {
       return [];
     } else if (currentCategory === "Unread") {
-      return allUsers.filter((user) => !isRead(user));
+      if (recentMessages.length > 0) {
+        return allUsers
+          .filter((user) => !isRead(user))
+          .filter(
+            (user) =>
+              user.firstName
+                .toLowerCase()
+                .includes(searchContent.toLowerCase()) ||
+              user.lastName.toLowerCase().includes(searchContent.toLowerCase())
+          );
+      } else {
+        return allUsers.filter((user) => !isRead(user));
+      }
     } else {
       return allUsers;
     }
-  }, [allUsers, currentCategory, recentMessages]);
+  }, [allUsers, currentCategory, recentMessages, searchContent]);
 
   return (
     <>
@@ -105,7 +134,11 @@ const Sidebar = () => {
             <Input
               type="search"
               placeholder="Search"
+              value={searchContent}
               className="w-full pl-8 bg-[#F6F6F6] text-[#6E6D6D] border-[#D1D1D1] border-[1px]"
+              onChange={(e) => {
+                setSearchContent(e.target.value);
+              }}
             />
           </div>
           <div className="flex gap-3 p-2 mb-2 overflow-x-auto">

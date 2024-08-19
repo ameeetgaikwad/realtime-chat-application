@@ -160,7 +160,6 @@ const ChatArea = () => {
       fetchMoreMessages(activeConversation, 20);
       setTimeout(() => {
         setIsLoadingMore(false);
-        console.log("total messages", messages[activeConversation]);
       }, 2000); // Prevent multiple rapid calls
     }
   };
