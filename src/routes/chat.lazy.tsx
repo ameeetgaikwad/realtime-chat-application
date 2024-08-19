@@ -42,7 +42,7 @@ function Chat() {
   return (
     <ChatProvider>
       <main>
-        <div className="flex h-screen">
+        <div className="flex h-[calc(100vh-3.5rem)]">
           <Sidebar />
           <ChatArea />
         </div>

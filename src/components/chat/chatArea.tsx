@@ -183,7 +183,7 @@ const ChatArea = () => {
 
   const activeMessages = messages[activeConversation] || [];
   return (
-    <div className="flex flex-col w-2/3 h-full">
+    <div className="flex flex-col w-2/3 h-[calc(100vh-3.5rem)]">
       <div className="flex items-center p-4 border-b">
         <Avatar className="mr-4">
           <AvatarImage src="/placeholder-user.jpg" alt="User" />

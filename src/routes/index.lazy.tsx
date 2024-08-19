@@ -1,16 +1,9 @@
 import { Button } from "@/components/ui/button";
-import {
-  SignedIn,
-  SignedOut,
-  SignInButton,
-  UserButton,
-  useUser,
-} from "@clerk/clerk-react";
+import { SignedOut, SignInButton, useUser } from "@clerk/clerk-react";
 import { Link } from "@tanstack/react-router";
 import { createLazyFileRoute } from "@tanstack/react-router";
 import chatImage from "@/assets/chat.png";
 
-import { WebcamIcon } from "@/components/icons";
 export const Route = createLazyFileRoute("/")({
   component: Index,
 });
@@ -19,22 +12,6 @@ function Index() {
   const { isSignedIn } = useUser();
   return (
     <div className="flex flex-col min-h-[100dvh]">
-      <header className="px-4 lg:px-6 h-14 flex items-center justify-between">
-        <Link href="/" className="flex items-center justify-center">
-          <WebcamIcon className="h-6 w-6" />
-          <span className="sr-only">Messaging App</span>
-        </Link>
-        <div className="flex items-center gap-4">
-          <SignedOut>
-            <Button>
-              <SignInButton />
-            </Button>
-          </SignedOut>
-          <SignedIn>
-            <UserButton />
-          </SignedIn>
-        </div>
-      </header>
       <main className="flex-1">
         <section className="w-full pt-12 md:pt-24 lg:pt-32 border-y">
           <div className="px-4 md:px-6 space-y-10 xl:space-y-16">
